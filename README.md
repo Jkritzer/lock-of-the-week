@@ -33,15 +33,14 @@ Each week, pick one college football game against the spread as your "lock." No 
 ## Deploying to Vercel
 
 1. Push this repo to GitHub, import it into Vercel.
-2. Set `DATABASE_URL`, `ODDS_API_KEY`, and `CRON_SECRET` as environment variables in the Vercel project settings.
-3. Vercel automatically sends `Authorization: Bearer $CRON_SECRET` to cron routes when `CRON_SECRET` is set — that's what `lib/cronAuth.ts` checks.
-4. `vercel.json` defines two crons: `sync-odds` every 3 hours, `grade-week` every hour.
+2. Set `DATABASE_URL`, `ODDS_API_KEY`, and `CRON_SECRET` as environment variables in the Vercel project settings (Production).
+3. `lib/cronAuth.ts` checks incoming cron requests for `Authorization: Bearer $CRON_SECRET`.
 
-**Note on Vercel's free (Hobby) plan:** cron jobs are limited there (historically to once/day). If your crons don't run as often as `vercel.json` asks for, either upgrade to Pro, or trigger the routes yourself on a real schedule with a free external scheduler (e.g. a GitHub Actions workflow on a cron trigger, or cron-job.org) doing:
-   ```
-   curl -H "Authorization: Bearer $CRON_SECRET" https://<your-app>.vercel.app/api/cron/sync-odds
-   curl -H "Authorization: Bearer $CRON_SECRET" https://<your-app>.vercel.app/api/cron/grade-week
-   ```
+**Scheduling is handled by GitHub Actions, not Vercel Cron** — Vercel's free (Hobby) plan only allows cron jobs to run once a day, which is too infrequent for syncing spreads/scores during game weeks. `.github/workflows/cron.yml` instead calls the two cron routes on a real schedule (sync-odds every 3 hours, grade-week every hour) via plain `curl`, authenticated with the same `CRON_SECRET`. That requires two things set on the GitHub repo (Settings → Secrets and variables → Actions):
+   - Secret `CRON_SECRET` — same value as in Vercel
+   - Variable `APP_URL` — your deployed URL, e.g. `https://lock-of-the-week-beta.vercel.app`
+
+   You can also trigger it manually from the Actions tab (`workflow_dispatch`), or via `gh workflow run cron.yml`.
 
 ## Adding/removing participants
 

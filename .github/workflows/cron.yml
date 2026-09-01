@@ -1,0 +1,22 @@
+name: Lock of the Week Cron
+
+on:
+  schedule:
+    - cron: "0 */3 * * *" # sync odds every 3 hours
+    - cron: "0 * * * *" # grade finished games every hour
+  workflow_dispatch:
+
+jobs:
+  sync-odds:
+    if: github.event_name == 'workflow_dispatch' || github.event.schedule == '0 */3 * * *'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Sync odds
+        run: curl -sf -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" "${{ vars.APP_URL }}/api/cron/sync-odds"
+
+  grade-week:
+    if: github.event_name == 'workflow_dispatch' || github.event.schedule == '0 * * * *'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Grade finished games
+        run: curl -sf -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" "${{ vars.APP_URL }}/api/cron/grade-week"
