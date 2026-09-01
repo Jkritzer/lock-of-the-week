@@ -36,6 +36,7 @@ export default function PickBoard({
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
 
   if (!initialParticipant) {
     return (
@@ -102,6 +103,15 @@ export default function PickBoard({
     });
   }
 
+  const normalizedQuery = query.trim().toLowerCase();
+  const filteredGames = normalizedQuery
+    ? games.filter(
+        (g) =>
+          g.homeTeam.toLowerCase().includes(normalizedQuery) ||
+          g.awayTeam.toLowerCase().includes(normalizedQuery),
+      )
+    : games;
+
   return (
     <div className="mx-auto max-w-2xl px-4 py-8">
       <div className="mb-6 flex items-center justify-between">
@@ -136,8 +146,22 @@ export default function PickBoard({
         <p className="text-zinc-500">No games loaded for this week yet — check back soon.</p>
       )}
 
+      {games.length > 0 && (
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search for a team…"
+          className="mb-4 w-full rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-zinc-950 dark:border-zinc-700 dark:bg-zinc-950 dark:focus:border-zinc-50"
+        />
+      )}
+
+      {games.length > 0 && filteredGames.length === 0 && (
+        <p className="text-zinc-500">No games match &quot;{query}&quot;.</p>
+      )}
+
       <div className="flex flex-col gap-3">
-        {games.map((game) => {
+        {filteredGames.map((game) => {
           const started = new Date(game.commenceTime) <= new Date();
           const noSpread = game.homeSpread === null;
           const disabled = started || noSpread || isLocked || isPending;
