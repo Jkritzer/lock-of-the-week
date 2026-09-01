@@ -1,0 +1,89 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum GameStatus {
+  SCHEDULED
+  FINAL
+  CANCELLED
+}
+
+enum PickResult {
+  PENDING
+  WIN
+  LOSS
+  PUSH
+}
+
+model Participant {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+
+  picks Pick[]
+}
+
+model Week {
+  id         String   @id @default(cuid())
+  seasonYear Int
+  weekNumber Int
+  startDate  DateTime
+  endDate    DateTime
+  createdAt  DateTime @default(now())
+
+  games Game[]
+  picks Pick[]
+
+  @@unique([seasonYear, weekNumber])
+}
+
+model Game {
+  id             String     @id @default(cuid())
+  weekId         String
+  oddsEventId    String     @unique
+  homeTeam       String
+  awayTeam       String
+  commenceTime   DateTime
+  // Spread applied to the home team. Negative = home team favored.
+  // Null until the odds sync finds a bookmaker line for this game.
+  homeSpread     Float?
+  status         GameStatus @default(SCHEDULED)
+  homeScore      Int?
+  awayScore      Int?
+  lastSyncedAt   DateTime   @default(now())
+
+  week  Week   @relation(fields: [weekId], references: [id])
+  picks Pick[]
+
+  @@index([weekId])
+}
+
+model Pick {
+  id            String     @id @default(cuid())
+  participantId String
+  weekId        String
+  gameId        String
+  // Must equal game.homeTeam or game.awayTeam
+  pickedTeam    String
+  // Spread for the picked team, captured at submission time (not re-priced later)
+  spreadAtPick  Float
+  submittedAt   DateTime   @default(now())
+
+  result      PickResult @default(PENDING)
+  coverMargin Float?
+
+  participant Participant @relation(fields: [participantId], references: [id])
+  week        Week        @relation(fields: [weekId], references: [id])
+  game        Game        @relation(fields: [gameId], references: [id])
+
+  @@unique([participantId, weekId])
+  @@index([gameId])
+}

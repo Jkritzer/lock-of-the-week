@@ -1,36 +1,48 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Lock of the Week
 
-## Getting Started
+Each week, pick one college football game against the spread as your "lock." No login — pick your name from the roster, submit one pick per week, locked in at that game's kickoff. Spreads come from [The Odds API](https://the-odds-api.com); a season leaderboard tracks record + cover margin.
 
-First, run the development server:
+## Stack
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- Next.js (App Router, TypeScript) + Tailwind
+- Postgres via [Neon](https://neon.tech) (or any Postgres) + Prisma 7 (with the `@prisma/adapter-pg` driver adapter)
+- Deployed on Vercel, with Vercel Cron for the odds/scores sync jobs
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Local setup
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. `npm install`
+2. Create a Postgres database (e.g. a free [Neon](https://neon.tech) project) and grab its connection string.
+3. Copy `.env.example` to `.env` and fill in:
+   - `DATABASE_URL` — your Postgres connection string
+   - `ODDS_API_KEY` — your key from https://the-odds-api.com
+   - `CRON_SECRET` — any random string (`openssl rand -hex 32`); used to authenticate cron requests
+4. `npm run db:migrate` — applies the schema
+5. `npm run db:seed` — seeds the participant roster (edit the list in `prisma/seed.ts` to add/remove people)
+6. `npm run dev` — http://localhost:3000
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## How it works
 
-## Learn More
+- **Weeks** run Tuesday–Monday (UTC), auto-created on first request each week — see `lib/week.ts`.
+- **`/api/cron/sync-odds`** pulls this week's NCAAF games + spreads from The Odds API and upserts them.
+- **Picking a game locks in the spread at that moment** (`spreadAtPick`) — it isn't re-priced later, even if the line moves.
+- **A pick locks when its game kicks off.** Before that, you can switch to a different game.
+- **`/api/cron/grade-week`** finds games past kickoff still marked `SCHEDULED`, checks The Odds API's scores endpoint, and once a game is `completed`, grades every pick against the spread it was made at (`lib/scoring.ts`).
+- **Leaderboard** (`/leaderboard`) ranks by net wins (wins − losses), with total cover margin as the tiebreaker.
+- **Identity** is a plain httpOnly cookie set when you tap your name — honor system, no passwords. "Not you?" clears it so someone else can pick on a shared device.
 
-To learn more about Next.js, take a look at the following resources:
+## Deploying to Vercel
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Push this repo to GitHub, import it into Vercel.
+2. Set `DATABASE_URL`, `ODDS_API_KEY`, and `CRON_SECRET` as environment variables in the Vercel project settings.
+3. Vercel automatically sends `Authorization: Bearer $CRON_SECRET` to cron routes when `CRON_SECRET` is set — that's what `lib/cronAuth.ts` checks.
+4. `vercel.json` defines two crons: `sync-odds` every 3 hours, `grade-week` every hour.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+**Note on Vercel's free (Hobby) plan:** cron jobs are limited there (historically to once/day). If your crons don't run as often as `vercel.json` asks for, either upgrade to Pro, or trigger the routes yourself on a real schedule with a free external scheduler (e.g. a GitHub Actions workflow on a cron trigger, or cron-job.org) doing:
+   ```
+   curl -H "Authorization: Bearer $CRON_SECRET" https://<your-app>.vercel.app/api/cron/sync-odds
+   curl -H "Authorization: Bearer $CRON_SECRET" https://<your-app>.vercel.app/api/cron/grade-week
+   ```
 
-## Deploy on Vercel
+## Adding/removing participants
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Edit the `PARTICIPANTS` array in `prisma/seed.ts` and re-run `npm run db:seed` (upserts by name, so it's safe to re-run).

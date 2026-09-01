@@ -1,0 +1,6 @@
+{
+  "crons": [
+    { "path": "/api/cron/sync-odds", "schedule": "0 */3 * * *" },
+    { "path": "/api/cron/grade-week", "schedule": "0 * * * *" }
+  ]
+}
