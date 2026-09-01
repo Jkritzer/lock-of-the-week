@@ -4,13 +4,24 @@ import { fetchScores } from "@/lib/oddsApi";
 import { gradePick } from "@/lib/scoring";
 import { isAuthorizedCronRequest } from "@/lib/cronAuth";
 
+const SCORES_LOOKBACK_DAYS = 3;
+
 export async function GET(req: Request) {
   if (!isAuthorizedCronRequest(req)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  // The Odds API's scores endpoint only looks back SCORES_LOOKBACK_DAYS days, so a game
+  // older than that can never resolve through it — excluding it here stops us from making
+  // a wasted API call every run just because one game never came back as completed.
   const pendingGames = await prisma.game.findMany({
-    where: { status: "SCHEDULED", commenceTime: { lte: new Date() } },
+    where: {
+      status: "SCHEDULED",
+      commenceTime: {
+        lte: new Date(),
+        gte: new Date(Date.now() - SCORES_LOOKBACK_DAYS * 24 * 60 * 60 * 1000),
+      },
+    },
     include: { picks: true },
   });
 
@@ -18,7 +29,7 @@ export async function GET(req: Request) {
     return NextResponse.json({ gamesFinalized: 0, picksGraded: 0 });
   }
 
-  const scores = await fetchScores(3);
+  const scores = await fetchScores(SCORES_LOOKBACK_DAYS);
   const scoresByEventId = new Map(scores.map((s) => [s.id, s]));
 
   let gamesFinalized = 0;
