@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
@@ -12,6 +13,10 @@ type Game = {
   commenceTime: string;
   homeSpread: number | null;
   status: "SCHEDULED" | "FINAL" | "CANCELLED";
+  awayLogo: string | null;
+  homeLogo: string | null;
+  awayPickedBy: string | null;
+  homePickedBy: string | null;
 };
 
 type CurrentPick = {
@@ -164,15 +169,19 @@ export default function PickBoard({
         {filteredGames.map((game) => {
           const started = new Date(game.commenceTime) <= new Date();
           const noSpread = game.homeSpread === null;
-          const disabled = started || noSpread || isLocked || isPending;
           const isPickedGame = initialPick?.gameId === game.id;
+          const awaySelected = isPickedGame && initialPick?.pickedTeam === game.awayTeam;
+          const homeSelected = isPickedGame && initialPick?.pickedTeam === game.homeTeam;
+          const awayTakenByOther = game.awayPickedBy !== null && !awaySelected;
+          const homeTakenByOther = game.homePickedBy !== null && !homeSelected;
+          const baseDisabled = started || noSpread || isLocked || isPending;
 
           return (
             <div
               key={game.id}
-              className="rounded-lg border border-zinc-200 px-4 py-3 dark:border-zinc-800"
+              className="rounded-xl border border-zinc-200 bg-white px-4 py-3 shadow-sm dark:border-zinc-800 dark:bg-zinc-950"
             >
-              <div className="mb-2 text-xs text-zinc-500">
+              <div className="mb-3 text-xs text-zinc-500">
                 {new Date(game.commenceTime).toLocaleString(undefined, {
                   weekday: "short",
                   month: "short",
@@ -185,16 +194,20 @@ export default function PickBoard({
               <div className="flex gap-2">
                 <TeamButton
                   label={game.awayTeam}
+                  logo={game.awayLogo}
                   spread={game.homeSpread === null ? null : -game.homeSpread}
-                  selected={isPickedGame && initialPick?.pickedTeam === game.awayTeam}
-                  disabled={disabled}
+                  selected={awaySelected}
+                  disabled={baseDisabled || awayTakenByOther}
+                  takenBy={awayTakenByOther ? game.awayPickedBy : null}
                   onClick={() => submitPick(game.id, game.awayTeam)}
                 />
                 <TeamButton
                   label={game.homeTeam}
+                  logo={game.homeLogo}
                   spread={game.homeSpread}
-                  selected={isPickedGame && initialPick?.pickedTeam === game.homeTeam}
-                  disabled={disabled}
+                  selected={homeSelected}
+                  disabled={baseDisabled || homeTakenByOther}
+                  takenBy={homeTakenByOther ? game.homePickedBy : null}
                   onClick={() => submitPick(game.id, game.homeTeam)}
                 />
               </div>
@@ -208,15 +221,19 @@ export default function PickBoard({
 
 function TeamButton({
   label,
+  logo,
   spread,
   selected,
   disabled,
+  takenBy,
   onClick,
 }: {
   label: string;
+  logo: string | null;
   spread: number | null;
   selected: boolean;
   disabled: boolean;
+  takenBy: string | null;
   onClick: () => void;
 }) {
   return (
@@ -224,15 +241,46 @@ function TeamButton({
       onClick={onClick}
       disabled={disabled}
       className={[
-        "flex-1 rounded-md border px-3 py-2 text-left text-sm transition-colors disabled:cursor-not-allowed disabled:opacity-50",
+        "flex flex-1 items-center gap-2 rounded-lg border px-3 py-2 text-left text-sm transition-colors disabled:cursor-not-allowed disabled:opacity-50",
         selected
           ? "border-zinc-950 bg-zinc-950 text-white dark:border-zinc-50 dark:bg-zinc-50 dark:text-zinc-950"
           : "border-zinc-300 hover:border-zinc-950 dark:border-zinc-700 dark:hover:border-zinc-50",
       ].join(" ")}
     >
-      <div className="font-medium">{label}</div>
-      <div className="text-xs opacity-70">{spread === null ? "—" : formatSpread(spread)}</div>
+      <TeamLogo src={logo} alt={label} />
+      <div className="min-w-0">
+        <div className="truncate font-medium">{label}</div>
+        <div className="truncate text-xs opacity-70">
+          {spread === null ? "—" : formatSpread(spread)}
+          {takenBy && ` · taken by ${takenBy}`}
+        </div>
+      </div>
     </button>
+  );
+}
+
+function TeamLogo({ src, alt }: { src: string | null; alt: string }) {
+  const [failed, setFailed] = useState(false);
+
+  if (!src || failed) {
+    return (
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-zinc-100 text-zinc-400 dark:bg-zinc-800 dark:text-zinc-600">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-4 w-4">
+          <path d="M12 2 4 5v6c0 5 3.5 9 8 11 4.5-2 8-6 8-11V5l-8-3Z" strokeLinejoin="round" />
+        </svg>
+      </div>
+    );
+  }
+
+  return (
+    <Image
+      src={src}
+      alt={alt}
+      width={32}
+      height={32}
+      className="h-8 w-8 shrink-0 object-contain"
+      onError={() => setFailed(true)}
+    />
   );
 }
 

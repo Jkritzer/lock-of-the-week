@@ -7,7 +7,7 @@ const prisma = new PrismaClient({ adapter });
 
 const PARTICIPANTS = [
   "Divo",
-  "Kev",
+  "Kev 💅",
   "Shooter Mike",
   "Kritzer",
   "Russ",

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { Prisma } from "@/app/generated/prisma/client";
 import { prisma } from "@/lib/db";
 import { getCurrentParticipant } from "@/lib/identity";
 
@@ -40,27 +41,48 @@ export async function POST(req: Request) {
     );
   }
 
+  const takenBy = await prisma.pick.findUnique({
+    where: { weekId_gameId_pickedTeam: { weekId: game.weekId, gameId: game.id, pickedTeam } },
+  });
+  if (takenBy && takenBy.participantId !== participant.id) {
+    return NextResponse.json(
+      { error: "Someone already picked that team — pick another." },
+      { status: 409 },
+    );
+  }
+
   const spreadAtPick = pickedTeam === game.homeTeam ? game.homeSpread : -game.homeSpread;
 
-  const pick = await prisma.pick.upsert({
-    where: { participantId_weekId: { participantId: participant.id, weekId: game.weekId } },
-    update: {
-      gameId: game.id,
-      pickedTeam,
-      spreadAtPick,
-      submittedAt: new Date(),
-      result: "PENDING",
-      coverMargin: null,
-    },
-    create: {
-      participantId: participant.id,
-      weekId: game.weekId,
-      gameId: game.id,
-      pickedTeam,
-      spreadAtPick,
-    },
-    include: { game: true },
-  });
+  let pick;
+  try {
+    pick = await prisma.pick.upsert({
+      where: { participantId_weekId: { participantId: participant.id, weekId: game.weekId } },
+      update: {
+        gameId: game.id,
+        pickedTeam,
+        spreadAtPick,
+        submittedAt: new Date(),
+        result: "PENDING",
+        coverMargin: null,
+      },
+      create: {
+        participantId: participant.id,
+        weekId: game.weekId,
+        gameId: game.id,
+        pickedTeam,
+        spreadAtPick,
+      },
+      include: { game: true },
+    });
+  } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
+      return NextResponse.json(
+        { error: "Someone already picked that team — pick another." },
+        { status: 409 },
+      );
+    }
+    throw err;
+  }
 
   return NextResponse.json({ pick });
 }

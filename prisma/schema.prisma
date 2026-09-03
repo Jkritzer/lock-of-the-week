@@ -85,5 +85,6 @@ model Pick {
   game        Game        @relation(fields: [gameId], references: [id])
 
   @@unique([participantId, weekId])
+  @@unique([weekId, gameId, pickedTeam])
   @@index([gameId])
 }

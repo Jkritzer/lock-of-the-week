@@ -1,17 +1,20 @@
 import { prisma } from "@/lib/db";
 import { getOrCreateCurrentWeek } from "@/lib/week";
 import { getCurrentParticipant } from "@/lib/identity";
+import { getTeamLogo } from "@/lib/teamLogos";
 import PickBoard from "@/components/PickBoard";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
   const week = await getOrCreateCurrentWeek();
-  const [games, participants, currentParticipant] = await Promise.all([
+  const [games, participants, currentParticipant, weekPicks] = await Promise.all([
     prisma.game.findMany({ where: { weekId: week.id }, orderBy: { commenceTime: "asc" } }),
     prisma.participant.findMany({ orderBy: { name: "asc" } }),
     getCurrentParticipant(),
+    prisma.pick.findMany({ where: { weekId: week.id }, include: { participant: true } }),
   ]);
+  const takenByTeam = new Map(weekPicks.map((p) => [`${p.gameId}:${p.pickedTeam}`, p.participant.name]));
 
   const currentPick = currentParticipant
     ? await prisma.pick.findUnique({
@@ -30,6 +33,10 @@ export default async function Home() {
         commenceTime: g.commenceTime.toISOString(),
         homeSpread: g.homeSpread,
         status: g.status,
+        awayLogo: getTeamLogo(g.awayTeam),
+        homeLogo: getTeamLogo(g.homeTeam),
+        awayPickedBy: takenByTeam.get(`${g.id}:${g.awayTeam}`) ?? null,
+        homePickedBy: takenByTeam.get(`${g.id}:${g.homeTeam}`) ?? null,
       }))}
       initialParticipant={currentParticipant ? { id: currentParticipant.id, name: currentParticipant.name } : null}
       initialPick={
