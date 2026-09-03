@@ -7,7 +7,7 @@ export default async function HistoryPage() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-8">
-      <h1 className="text-2xl font-bold tracking-tight">Picks by Week</h1>
+      <h1 className="font-display text-3xl font-semibold tracking-tight">Picks by Week</h1>
       <p className="mt-1 mb-6 text-sm text-zinc-500 dark:text-zinc-400">Who picked what, every week of the season.</p>
 
       {weeks.length === 0 && <p className="text-zinc-500 dark:text-zinc-400">No weeks yet.</p>}

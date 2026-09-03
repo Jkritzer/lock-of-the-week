@@ -54,7 +54,7 @@ export default function PickBoard({
   if (!initialParticipant) {
     return (
       <div className="mx-auto max-w-2xl px-4 py-10">
-        <h1 className="text-2xl font-bold tracking-tight">{weekLabel}</h1>
+        <h1 className="font-display text-3xl font-semibold tracking-tight">{weekLabel}</h1>
         <p className="mt-1 mb-8 text-zinc-500 dark:text-zinc-400">Who&apos;s picking?</p>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           {participants.map((p) => (
@@ -132,7 +132,7 @@ export default function PickBoard({
     <div className="mx-auto max-w-2xl px-4 py-8">
       <div className="mb-6 flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">{weekLabel}</h1>
+          <h1 className="font-display text-3xl font-semibold tracking-tight">{weekLabel}</h1>
           <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
             Picking as{" "}
             <span className="font-semibold text-zinc-900 dark:text-zinc-100">{initialParticipant.name}</span>
@@ -172,26 +172,24 @@ export default function PickBoard({
               {roster.filter((r) => r.pick === null).length} still picking
             </span>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
             {roster.map((r) => (
               <div
                 key={r.id}
                 className={[
-                  "flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm",
-                  r.id === initialParticipant.id
-                    ? "border-blue-300 bg-blue-50 dark:border-blue-500/50 dark:bg-blue-500/10"
-                    : "border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900",
+                  "flex items-center gap-3 border-b border-zinc-100 px-4 py-2.5 text-sm last:border-0 dark:border-zinc-800",
+                  r.id === initialParticipant.id ? "bg-blue-50/60 dark:bg-blue-500/5" : "",
                 ].join(" ")}
               >
                 <span
                   className={[
-                    "h-1.5 w-1.5 shrink-0 rounded-full",
+                    "h-2 w-2 shrink-0 rounded-full",
                     r.pick === null ? "bg-amber-500" : r.pick.locked ? "bg-emerald-500" : "bg-blue-500",
                   ].join(" ")}
                 />
-                <span className="font-medium text-zinc-900 dark:text-zinc-100">{r.name}</span>
-                <span className="text-zinc-400 dark:text-zinc-600">
-                  {r.pick === null ? "picking" : `${r.pick.team} ${formatSpread(r.pick.spread)}`}
+                <span className="shrink-0 font-medium text-zinc-900 dark:text-zinc-100">{r.name}</span>
+                <span className="min-w-0 flex-1 truncate text-right text-zinc-400 dark:text-zinc-600">
+                  {r.pick === null ? "still picking" : `${r.pick.team} ${formatSpread(r.pick.spread)}`}
                 </span>
               </div>
             ))}
@@ -240,7 +238,9 @@ export default function PickBoard({
       <div className="flex flex-col gap-6">
         {groupGamesByDay(filteredGames).map((day) => (
           <div key={day.key}>
-            <h3 className="mb-2 text-sm font-semibold text-zinc-500 dark:text-zinc-400">{day.label}</h3>
+            <h3 className="font-display mb-2 text-lg font-semibold text-zinc-700 dark:text-zinc-300">
+              {day.label}
+            </h3>
             <div className="flex flex-col gap-3">
               {day.games.map((game) => {
                 const started = new Date(game.commenceTime) <= new Date();
@@ -277,6 +277,7 @@ export default function PickBoard({
                         selected={awaySelected}
                         disabled={baseDisabled || awayTakenByOther}
                         takenBy={awayTakenByOther ? game.awayPickedBy : null}
+                        isHome={false}
                         onClick={() => submitPick(game.id, game.awayTeam)}
                       />
                       <TeamRow
@@ -286,6 +287,7 @@ export default function PickBoard({
                         selected={homeSelected}
                         disabled={baseDisabled || homeTakenByOther}
                         takenBy={homeTakenByOther ? game.homePickedBy : null}
+                        isHome={true}
                         onClick={() => submitPick(game.id, game.homeTeam)}
                       />
                     </div>
@@ -326,6 +328,7 @@ function TeamRow({
   selected,
   disabled,
   takenBy,
+  isHome,
   onClick,
 }: {
   label: string;
@@ -334,6 +337,7 @@ function TeamRow({
   selected: boolean;
   disabled: boolean;
   takenBy: string | null;
+  isHome: boolean;
   onClick: () => void;
 }) {
   return (
@@ -361,13 +365,16 @@ function TeamRow({
         >
           {label}
         </div>
-        {takenBy && (
-          <div className="mt-0.5 truncate text-xs text-zinc-400 dark:text-zinc-600">taken by {takenBy}</div>
+        {(isHome || takenBy) && (
+          <div className="mt-0.5 flex items-center gap-1.5 text-xs">
+            {isHome && <span className="text-zinc-400 dark:text-zinc-600">Home</span>}
+            {takenBy && <span className="truncate text-zinc-400 dark:text-zinc-600">taken by {takenBy}</span>}
+          </div>
         )}
       </div>
       <div
         className={[
-          "flex shrink-0 items-center gap-1.5 text-sm font-semibold tabular-nums",
+          "shrink-0 text-sm font-semibold tabular-nums",
           selected
             ? "text-blue-700 dark:text-blue-300"
             : disabled
@@ -376,18 +383,6 @@ function TeamRow({
         ].join(" ")}
       >
         {spread === null ? "—" : formatSpread(spread)}
-        {spread !== null && spread < 0 && (
-          <span
-            className={[
-              "rounded-full px-1.5 py-0.5 text-[10px] font-semibold",
-              selected
-                ? "bg-blue-100 text-blue-600 dark:bg-blue-500/20 dark:text-blue-300"
-                : "bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400",
-            ].join(" ")}
-          >
-            FAV
-          </span>
-        )}
       </div>
       {selected && <CheckIcon className="h-4 w-4 shrink-0 text-blue-600 dark:text-blue-400" />}
     </button>

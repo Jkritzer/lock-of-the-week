@@ -7,7 +7,7 @@ export default async function LeaderboardPage() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-8">
-      <h1 className="text-2xl font-bold tracking-tight">Season Leaderboard</h1>
+      <h1 className="font-display text-3xl font-semibold tracking-tight">Season Leaderboard</h1>
       <p className="mt-1 mb-6 text-sm text-zinc-500 dark:text-zinc-400">Record, then cover margin as the tiebreaker.</p>
 
       {standings.length === 0 || standings.every((s) => s.wins + s.losses + s.pushes === 0) ? (
