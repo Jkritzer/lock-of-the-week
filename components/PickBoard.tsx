@@ -45,10 +45,10 @@ export default function PickBoard({
 
   if (!initialParticipant) {
     return (
-      <div className="mx-auto max-w-2xl px-4 py-8">
-        <h1 className="mb-1 text-xl font-semibold">{weekLabel}</h1>
-        <p className="mb-6 text-zinc-500">Who&apos;s picking?</p>
-        <div className="flex flex-wrap gap-2">
+      <div className="mx-auto max-w-2xl px-4 py-10">
+        <h1 className="text-2xl font-bold tracking-tight">{weekLabel}</h1>
+        <p className="mt-1 mb-8 text-zinc-500 dark:text-zinc-400">Who&apos;s picking?</p>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           {participants.map((p) => (
             <button
               key={p.id}
@@ -68,13 +68,16 @@ export default function PickBoard({
                   router.refresh();
                 });
               }}
-              className="rounded-full border border-zinc-300 px-4 py-2 text-sm font-medium hover:border-zinc-950 disabled:opacity-50 dark:border-zinc-700 dark:hover:border-zinc-50"
+              className="flex flex-col items-center gap-2.5 rounded-2xl border border-zinc-200 bg-white px-4 py-5 text-sm font-medium text-zinc-700 shadow-sm transition-colors hover:border-indigo-300 hover:bg-indigo-50 disabled:opacity-50 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:border-indigo-500/50 dark:hover:bg-indigo-500/10"
             >
+              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-100 text-base font-semibold text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
+                {initials(p.name)}
+              </span>
               {p.name}
             </button>
           ))}
         </div>
-        {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
+        {error && <p className="mt-4 text-sm text-red-600 dark:text-red-400">{error}</p>}
       </div>
     );
   }
@@ -119,50 +122,63 @@ export default function PickBoard({
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-8">
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-xl font-semibold">{weekLabel}</h1>
-          <p className="text-zinc-500">
-            Picking as <span className="font-medium text-zinc-950 dark:text-zinc-50">{initialParticipant.name}</span>
+          <h1 className="text-2xl font-bold tracking-tight">{weekLabel}</h1>
+          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+            Picking as{" "}
+            <span className="font-semibold text-zinc-900 dark:text-zinc-100">{initialParticipant.name}</span>
           </p>
         </div>
         <button
           onClick={switchPerson}
           disabled={isPending}
-          className="text-sm text-zinc-500 underline hover:text-zinc-950 dark:hover:text-zinc-50"
+          className="shrink-0 rounded-full border border-zinc-200 px-3 py-1.5 text-xs font-medium text-zinc-500 transition-colors hover:border-zinc-400 hover:text-zinc-900 disabled:opacity-50 dark:border-zinc-800 dark:text-zinc-400 dark:hover:border-zinc-600 dark:hover:text-zinc-100"
         >
           Not you?
         </button>
       </div>
 
       {initialPick && (
-        <div className="mb-6 rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm dark:border-zinc-800 dark:bg-zinc-900">
-          Your lock:{" "}
-          <span className="font-semibold">
-            {initialPick.pickedTeam} {formatSpread(initialPick.spreadAtPick)}
-          </span>
-          {isLocked ? " — locked in, kickoff has passed." : " — you can still change this."}
+        <div className="mb-6 flex items-center gap-3 rounded-2xl border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm dark:border-indigo-500/30 dark:bg-indigo-500/10">
+          <LockIcon className="h-5 w-5 shrink-0 text-indigo-600 dark:text-indigo-400" />
+          <p className="text-indigo-900 dark:text-indigo-200">
+            Your lock:{" "}
+            <span className="font-semibold">
+              {initialPick.pickedTeam} {formatSpread(initialPick.spreadAtPick)}
+            </span>
+            <span className="text-indigo-700/70 dark:text-indigo-300/70">
+              {isLocked ? " — locked in, kickoff has passed." : " — you can still change this."}
+            </span>
+          </p>
         </div>
       )}
 
-      {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
+      {error && (
+        <p className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-500/10 dark:text-red-400">
+          {error}
+        </p>
+      )}
 
       {games.length === 0 && (
-        <p className="text-zinc-500">No games loaded for this week yet — check back soon.</p>
+        <p className="text-zinc-500 dark:text-zinc-400">No games loaded for this week yet — check back soon.</p>
       )}
 
       {games.length > 0 && (
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search for a team…"
-          className="mb-4 w-full rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-zinc-950 dark:border-zinc-700 dark:bg-zinc-950 dark:focus:border-zinc-50"
-        />
+        <div className="relative mb-4">
+          <SearchIcon className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-zinc-400" />
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search for a team…"
+            className="w-full rounded-xl border border-zinc-200 bg-white py-2.5 pr-3 pl-9 text-sm outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100 dark:border-zinc-800 dark:bg-zinc-900 dark:focus:border-indigo-500 dark:focus:ring-indigo-500/10"
+          />
+        </div>
       )}
 
       {games.length > 0 && filteredGames.length === 0 && (
-        <p className="text-zinc-500">No games match &quot;{query}&quot;.</p>
+        <p className="text-zinc-500 dark:text-zinc-400">No games match &quot;{query}&quot;.</p>
       )}
 
       <div className="flex flex-col gap-3">
@@ -179,20 +195,22 @@ export default function PickBoard({
           return (
             <div
               key={game.id}
-              className="rounded-xl border border-zinc-200 bg-white px-4 py-3 shadow-sm dark:border-zinc-800 dark:bg-zinc-950"
+              className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900"
             >
-              <div className="mb-3 text-xs text-zinc-500">
-                {new Date(game.commenceTime).toLocaleString(undefined, {
-                  weekday: "short",
-                  month: "short",
-                  day: "numeric",
-                  hour: "numeric",
-                  minute: "2-digit",
-                })}
-                {noSpread && " · spread not posted yet"}
+              <div className="flex items-center justify-between border-b border-zinc-100 px-4 py-2 text-xs text-zinc-500 dark:border-zinc-800 dark:text-zinc-500">
+                <span>
+                  {new Date(game.commenceTime).toLocaleString(undefined, {
+                    weekday: "short",
+                    month: "short",
+                    day: "numeric",
+                    hour: "numeric",
+                    minute: "2-digit",
+                  })}
+                </span>
+                {noSpread && <span className="font-medium text-amber-600 dark:text-amber-500">No spread yet</span>}
               </div>
-              <div className="grid grid-cols-2 gap-2">
-                <TeamButton
+              <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
+                <TeamRow
                   label={game.awayTeam}
                   logo={game.awayLogo}
                   spread={game.homeSpread === null ? null : -game.homeSpread}
@@ -201,7 +219,7 @@ export default function PickBoard({
                   takenBy={awayTakenByOther ? game.awayPickedBy : null}
                   onClick={() => submitPick(game.id, game.awayTeam)}
                 />
-                <TeamButton
+                <TeamRow
                   label={game.homeTeam}
                   logo={game.homeLogo}
                   spread={game.homeSpread}
@@ -219,7 +237,7 @@ export default function PickBoard({
   );
 }
 
-function TeamButton({
+function TeamRow({
   label,
   logo,
   spread,
@@ -241,33 +259,54 @@ function TeamButton({
       onClick={onClick}
       disabled={disabled}
       className={[
-        "flex w-full min-w-0 items-center gap-2 rounded-lg border px-3 py-2 text-left text-sm transition-colors disabled:cursor-not-allowed disabled:opacity-50",
+        "flex w-full items-center gap-3 px-4 py-3 text-left transition-colors disabled:cursor-not-allowed",
         selected
-          ? "border-zinc-950 bg-zinc-950 text-white dark:border-zinc-50 dark:bg-zinc-50 dark:text-zinc-950"
-          : "border-zinc-300 hover:border-zinc-950 dark:border-zinc-700 dark:hover:border-zinc-50",
+          ? "bg-indigo-50 dark:bg-indigo-500/10"
+          : "hover:bg-zinc-50 disabled:hover:bg-transparent dark:hover:bg-zinc-800/60",
       ].join(" ")}
     >
-      <TeamLogo src={logo} alt={label} />
-      <div className="min-w-0">
-        <div className="truncate font-medium">{label}</div>
-        <div className="truncate text-xs opacity-70">
-          {spread === null ? "—" : formatSpread(spread)}
-          {takenBy && ` · taken by ${takenBy}`}
+      <TeamLogo src={logo} alt={label} muted={disabled && !selected} />
+      <div className="min-w-0 flex-1">
+        <div
+          className={[
+            "truncate text-sm font-medium",
+            selected
+              ? "text-indigo-700 dark:text-indigo-300"
+              : disabled
+                ? "text-zinc-400 dark:text-zinc-600"
+                : "text-zinc-900 dark:text-zinc-100",
+          ].join(" ")}
+        >
+          {label}
         </div>
+        {takenBy && (
+          <div className="mt-0.5 truncate text-xs text-zinc-400 dark:text-zinc-600">taken by {takenBy}</div>
+        )}
       </div>
+      <div
+        className={[
+          "shrink-0 text-sm font-semibold tabular-nums",
+          selected
+            ? "text-indigo-700 dark:text-indigo-300"
+            : disabled
+              ? "text-zinc-400 dark:text-zinc-600"
+              : "text-zinc-600 dark:text-zinc-400",
+        ].join(" ")}
+      >
+        {spread === null ? "—" : formatSpread(spread)}
+      </div>
+      {selected && <CheckIcon className="h-4 w-4 shrink-0 text-indigo-600 dark:text-indigo-400" />}
     </button>
   );
 }
 
-function TeamLogo({ src, alt }: { src: string | null; alt: string }) {
+function TeamLogo({ src, alt, muted }: { src: string | null; alt: string; muted: boolean }) {
   const [failed, setFailed] = useState(false);
 
   if (!src || failed) {
     return (
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-zinc-100 text-zinc-400 dark:bg-zinc-800 dark:text-zinc-600">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-4 w-4">
-          <path d="M12 2 4 5v6c0 5 3.5 9 8 11 4.5-2 8-6 8-11V5l-8-3Z" strokeLinejoin="round" />
-        </svg>
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-zinc-100 text-zinc-400 dark:bg-zinc-800 dark:text-zinc-600">
+        <ShieldIcon className="h-4 w-4" />
       </div>
     );
   }
@@ -276,14 +315,53 @@ function TeamLogo({ src, alt }: { src: string | null; alt: string }) {
     <Image
       src={src}
       alt={alt}
-      width={32}
-      height={32}
-      className="h-8 w-8 shrink-0 object-contain"
+      width={36}
+      height={36}
+      className={["h-9 w-9 shrink-0 object-contain", muted ? "opacity-40 grayscale" : ""].join(" ")}
       onError={() => setFailed(true)}
     />
   );
 }
 
+function initials(name: string): string {
+  const letters = name.match(/\p{L}/gu) ?? [];
+  return (letters[0] ?? "?").toUpperCase();
+}
+
 function formatSpread(spread: number): string {
   return spread > 0 ? `+${spread}` : `${spread}`;
+}
+
+function ShieldIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className={className}>
+      <path d="M12 2 4 5v6c0 5 3.5 9 8 11 4.5-2 8-6 8-11V5l-8-3Z" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function LockIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className={className}>
+      <rect x="5" y="11" width="14" height="9" rx="2" strokeLinejoin="round" />
+      <path d="M8 11V7a4 4 0 0 1 8 0v4" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function SearchIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className={className}>
+      <circle cx="11" cy="11" r="7" />
+      <path d="m20 20-3.5-3.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function CheckIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} className={className}>
+      <path d="M20 6 9 17l-5-5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
 }

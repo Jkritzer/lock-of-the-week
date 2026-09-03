@@ -43,17 +43,20 @@ const SECTIONS: { title: string; body: string[] }[] = [
 export default function RulesPage() {
   return (
     <div className="mx-auto max-w-2xl px-4 py-8">
-      <h1 className="mb-1 text-xl font-semibold">How It Works</h1>
-      <p className="mb-6 text-zinc-500">The rules, in plain English.</p>
+      <h1 className="text-2xl font-bold tracking-tight">How It Works</h1>
+      <p className="mt-1 mb-6 text-sm text-zinc-500 dark:text-zinc-400">The rules, in plain English.</p>
 
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-4">
         {SECTIONS.map((section) => (
-          <div key={section.title}>
-            <h2 className="mb-2 font-semibold">{section.title}</h2>
+          <div
+            key={section.title}
+            className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900"
+          >
+            <h2 className="mb-2 font-semibold text-zinc-900 dark:text-zinc-100">{section.title}</h2>
             <ul className="flex flex-col gap-1.5 text-sm text-zinc-600 dark:text-zinc-400">
               {section.body.map((line) => (
                 <li key={line} className="flex gap-2">
-                  <span className="text-zinc-400">·</span>
+                  <span className="text-indigo-400 dark:text-indigo-500">·</span>
                   <span>{line}</span>
                 </li>
               ))}
