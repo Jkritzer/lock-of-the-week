@@ -25,18 +25,26 @@ type CurrentPick = {
   spreadAtPick: number;
 } | null;
 
+type RosterEntry = {
+  id: string;
+  name: string;
+  pick: { team: string; spread: number; locked: boolean } | null;
+};
+
 export default function PickBoard({
   participants,
   games,
   weekLabel,
   initialParticipant,
   initialPick,
+  roster,
 }: {
   participants: Participant[];
   games: Game[];
   weekLabel: string;
   initialParticipant: Participant | null;
   initialPick: CurrentPick;
+  roster: RosterEntry[];
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -154,6 +162,54 @@ export default function PickBoard({
         </div>
       )}
 
+      {roster.length > 0 && (
+        <div className="mb-6">
+          <div className="mb-2 flex items-center justify-between">
+            <h2 className="text-xs font-semibold tracking-wide text-zinc-500 uppercase dark:text-zinc-500">
+              The Room
+            </h2>
+            <span className="text-xs text-zinc-400 dark:text-zinc-600">
+              {roster.filter((r) => r.pick === null).length} still picking
+            </span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {roster.map((r) => (
+              <div
+                key={r.id}
+                className={[
+                  "flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm",
+                  r.id === initialParticipant.id
+                    ? "border-indigo-300 bg-indigo-50 dark:border-indigo-500/50 dark:bg-indigo-500/10"
+                    : "border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900",
+                ].join(" ")}
+              >
+                <span
+                  className={[
+                    "h-1.5 w-1.5 shrink-0 rounded-full",
+                    r.pick === null ? "bg-amber-500" : r.pick.locked ? "bg-emerald-500" : "bg-blue-500",
+                  ].join(" ")}
+                />
+                <span className="font-medium text-zinc-900 dark:text-zinc-100">{r.name}</span>
+                <span className="text-zinc-400 dark:text-zinc-600">
+                  {r.pick === null ? "picking" : `${r.pick.team} ${formatSpread(r.pick.spread)}`}
+                </span>
+              </div>
+            ))}
+          </div>
+          <div className="mt-2 flex gap-3 text-xs text-zinc-400 dark:text-zinc-600">
+            <span className="flex items-center gap-1">
+              <span className="h-1.5 w-1.5 rounded-full bg-amber-500" /> still picking
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="h-1.5 w-1.5 rounded-full bg-blue-500" /> picked
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> locked in
+            </span>
+          </div>
+        </div>
+      )}
+
       {error && (
         <p className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-500/10 dark:text-red-400">
           {error}
@@ -181,60 +237,86 @@ export default function PickBoard({
         <p className="text-zinc-500 dark:text-zinc-400">No games match &quot;{query}&quot;.</p>
       )}
 
-      <div className="flex flex-col gap-3">
-        {filteredGames.map((game) => {
-          const started = new Date(game.commenceTime) <= new Date();
-          const noSpread = game.homeSpread === null;
-          const isPickedGame = initialPick?.gameId === game.id;
-          const awaySelected = isPickedGame && initialPick?.pickedTeam === game.awayTeam;
-          const homeSelected = isPickedGame && initialPick?.pickedTeam === game.homeTeam;
-          const awayTakenByOther = game.awayPickedBy !== null && !awaySelected;
-          const homeTakenByOther = game.homePickedBy !== null && !homeSelected;
-          const baseDisabled = started || noSpread || isLocked || isPending;
+      <div className="flex flex-col gap-6">
+        {groupGamesByDay(filteredGames).map((day) => (
+          <div key={day.key}>
+            <h3 className="mb-2 text-sm font-semibold text-zinc-500 dark:text-zinc-400">{day.label}</h3>
+            <div className="flex flex-col gap-3">
+              {day.games.map((game) => {
+                const started = new Date(game.commenceTime) <= new Date();
+                const noSpread = game.homeSpread === null;
+                const isPickedGame = initialPick?.gameId === game.id;
+                const awaySelected = isPickedGame && initialPick?.pickedTeam === game.awayTeam;
+                const homeSelected = isPickedGame && initialPick?.pickedTeam === game.homeTeam;
+                const awayTakenByOther = game.awayPickedBy !== null && !awaySelected;
+                const homeTakenByOther = game.homePickedBy !== null && !homeSelected;
+                const baseDisabled = started || noSpread || isLocked || isPending;
 
-          return (
-            <div
-              key={game.id}
-              className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900"
-            >
-              <div className="flex items-center justify-between border-b border-zinc-100 px-4 py-2 text-xs text-zinc-500 dark:border-zinc-800 dark:text-zinc-500">
-                <span>
-                  {new Date(game.commenceTime).toLocaleString(undefined, {
-                    weekday: "short",
-                    month: "short",
-                    day: "numeric",
-                    hour: "numeric",
-                    minute: "2-digit",
-                  })}
-                </span>
-                {noSpread && <span className="font-medium text-amber-600 dark:text-amber-500">No spread yet</span>}
-              </div>
-              <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
-                <TeamRow
-                  label={game.awayTeam}
-                  logo={game.awayLogo}
-                  spread={game.homeSpread === null ? null : -game.homeSpread}
-                  selected={awaySelected}
-                  disabled={baseDisabled || awayTakenByOther}
-                  takenBy={awayTakenByOther ? game.awayPickedBy : null}
-                  onClick={() => submitPick(game.id, game.awayTeam)}
-                />
-                <TeamRow
-                  label={game.homeTeam}
-                  logo={game.homeLogo}
-                  spread={game.homeSpread}
-                  selected={homeSelected}
-                  disabled={baseDisabled || homeTakenByOther}
-                  takenBy={homeTakenByOther ? game.homePickedBy : null}
-                  onClick={() => submitPick(game.id, game.homeTeam)}
-                />
-              </div>
+                return (
+                  <div
+                    key={game.id}
+                    className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900"
+                  >
+                    <div className="flex items-center justify-between border-b border-zinc-100 px-4 py-2 text-xs text-zinc-500 dark:border-zinc-800 dark:text-zinc-500">
+                      <span>
+                        {new Date(game.commenceTime).toLocaleString(undefined, {
+                          hour: "numeric",
+                          minute: "2-digit",
+                        })}
+                        {started && <span className="ml-2 text-zinc-400 dark:text-zinc-600">· Kicked off</span>}
+                      </span>
+                      {noSpread && (
+                        <span className="font-medium text-amber-600 dark:text-amber-500">No spread yet</span>
+                      )}
+                    </div>
+                    <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
+                      <TeamRow
+                        label={game.awayTeam}
+                        logo={game.awayLogo}
+                        spread={game.homeSpread === null ? null : -game.homeSpread}
+                        selected={awaySelected}
+                        disabled={baseDisabled || awayTakenByOther}
+                        takenBy={awayTakenByOther ? game.awayPickedBy : null}
+                        onClick={() => submitPick(game.id, game.awayTeam)}
+                      />
+                      <TeamRow
+                        label={game.homeTeam}
+                        logo={game.homeLogo}
+                        spread={game.homeSpread}
+                        selected={homeSelected}
+                        disabled={baseDisabled || homeTakenByOther}
+                        takenBy={homeTakenByOther ? game.homePickedBy : null}
+                        onClick={() => submitPick(game.id, game.homeTeam)}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          );
-        })}
+          </div>
+        ))}
       </div>
     </div>
   );
+}
+
+function groupGamesByDay(games: Game[]): { key: string; label: string; games: Game[] }[] {
+  const groups: { key: string; label: string; games: Game[] }[] = [];
+  for (const game of games) {
+    const date = new Date(game.commenceTime);
+    const key = date.toDateString();
+    const lastGroup = groups[groups.length - 1];
+    if (lastGroup && lastGroup.key === key) {
+      lastGroup.games.push(game);
+    } else {
+      groups.push({
+        key,
+        label: date.toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" }),
+        games: [game],
+      });
+    }
+  }
+  return groups;
 }
 
 function TeamRow({
@@ -285,7 +367,7 @@ function TeamRow({
       </div>
       <div
         className={[
-          "shrink-0 text-sm font-semibold tabular-nums",
+          "flex shrink-0 items-center gap-1.5 text-sm font-semibold tabular-nums",
           selected
             ? "text-indigo-700 dark:text-indigo-300"
             : disabled
@@ -294,6 +376,18 @@ function TeamRow({
         ].join(" ")}
       >
         {spread === null ? "—" : formatSpread(spread)}
+        {spread !== null && spread < 0 && (
+          <span
+            className={[
+              "rounded-full px-1.5 py-0.5 text-[10px] font-semibold",
+              selected
+                ? "bg-indigo-100 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-300"
+                : "bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400",
+            ].join(" ")}
+          >
+            FAV
+          </span>
+        )}
       </div>
       {selected && <CheckIcon className="h-4 w-4 shrink-0 text-indigo-600 dark:text-indigo-400" />}
     </button>

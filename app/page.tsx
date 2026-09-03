@@ -12,9 +12,11 @@ export default async function Home() {
     prisma.game.findMany({ where: { weekId: week.id }, orderBy: { commenceTime: "asc" } }),
     prisma.participant.findMany({ orderBy: { name: "asc" } }),
     getCurrentParticipant(),
-    prisma.pick.findMany({ where: { weekId: week.id }, include: { participant: true } }),
+    prisma.pick.findMany({ where: { weekId: week.id }, include: { participant: true, game: true } }),
   ]);
   const takenByTeam = new Map(weekPicks.map((p) => [`${p.gameId}:${p.pickedTeam}`, p.participant.name]));
+  const pickByParticipant = new Map(weekPicks.map((p) => [p.participantId, p]));
+  const now = new Date();
 
   const currentPick = currentParticipant
     ? await prisma.pick.findUnique({
@@ -26,6 +28,16 @@ export default async function Home() {
     <PickBoard
       weekLabel={`Week ${week.weekNumber} · ${week.seasonYear}`}
       participants={participants.map((p) => ({ id: p.id, name: p.name }))}
+      roster={participants.map((p) => {
+        const pick = pickByParticipant.get(p.id);
+        return {
+          id: p.id,
+          name: p.name,
+          pick: pick
+            ? { team: pick.pickedTeam, spread: pick.spreadAtPick, locked: pick.game.commenceTime <= now }
+            : null,
+        };
+      })}
       games={games.map((g) => ({
         id: g.id,
         homeTeam: g.homeTeam,
