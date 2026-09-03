@@ -27,7 +27,7 @@ export default function NavBar() {
               className={
                 "shrink-0 rounded-full px-3 py-1.5 text-sm font-medium transition-colors " +
                 (pathname === link.href
-                  ? "bg-indigo-600 text-white dark:bg-indigo-500"
+                  ? "bg-blue-600 text-white dark:bg-blue-500"
                   : "text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-50")
               }
             >

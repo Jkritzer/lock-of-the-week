@@ -76,7 +76,7 @@ export default function PickBoard({
                   router.refresh();
                 });
               }}
-              className="flex flex-col items-center gap-2.5 rounded-2xl border border-zinc-200 bg-white px-4 py-5 text-sm font-medium text-zinc-700 shadow-sm transition-colors hover:border-indigo-300 hover:bg-indigo-50 disabled:opacity-50 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:border-indigo-500/50 dark:hover:bg-indigo-500/10"
+              className="flex flex-col items-center gap-2.5 rounded-2xl border border-zinc-200 bg-white px-4 py-5 text-sm font-medium text-zinc-700 shadow-sm transition-colors hover:border-blue-300 hover:bg-blue-50 disabled:opacity-50 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:border-blue-500/50 dark:hover:bg-blue-500/10"
             >
               <span className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-100 text-base font-semibold text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
                 {initials(p.name)}
@@ -148,14 +148,14 @@ export default function PickBoard({
       </div>
 
       {initialPick && (
-        <div className="mb-6 flex items-center gap-3 rounded-2xl border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm dark:border-indigo-500/30 dark:bg-indigo-500/10">
-          <LockIcon className="h-5 w-5 shrink-0 text-indigo-600 dark:text-indigo-400" />
-          <p className="text-indigo-900 dark:text-indigo-200">
+        <div className="mb-6 flex items-center gap-3 rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm dark:border-blue-500/30 dark:bg-blue-500/10">
+          <LockIcon className="h-5 w-5 shrink-0 text-blue-600 dark:text-blue-400" />
+          <p className="text-blue-900 dark:text-blue-200">
             Your lock:{" "}
             <span className="font-semibold">
               {initialPick.pickedTeam} {formatSpread(initialPick.spreadAtPick)}
             </span>
-            <span className="text-indigo-700/70 dark:text-indigo-300/70">
+            <span className="text-blue-700/70 dark:text-blue-300/70">
               {isLocked ? " — locked in, kickoff has passed." : " — you can still change this."}
             </span>
           </p>
@@ -166,7 +166,7 @@ export default function PickBoard({
         <div className="mb-6">
           <div className="mb-2 flex items-center justify-between">
             <h2 className="text-xs font-semibold tracking-wide text-zinc-500 uppercase dark:text-zinc-500">
-              The Room
+              Football Guys
             </h2>
             <span className="text-xs text-zinc-400 dark:text-zinc-600">
               {roster.filter((r) => r.pick === null).length} still picking
@@ -179,7 +179,7 @@ export default function PickBoard({
                 className={[
                   "flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm",
                   r.id === initialParticipant.id
-                    ? "border-indigo-300 bg-indigo-50 dark:border-indigo-500/50 dark:bg-indigo-500/10"
+                    ? "border-blue-300 bg-blue-50 dark:border-blue-500/50 dark:bg-blue-500/10"
                     : "border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900",
                 ].join(" ")}
               >
@@ -228,7 +228,7 @@ export default function PickBoard({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search for a team…"
-            className="w-full rounded-xl border border-zinc-200 bg-white py-2.5 pr-3 pl-9 text-sm outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100 dark:border-zinc-800 dark:bg-zinc-900 dark:focus:border-indigo-500 dark:focus:ring-indigo-500/10"
+            className="w-full rounded-xl border border-zinc-200 bg-white py-2.5 pr-3 pl-9 text-sm outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100 dark:border-zinc-800 dark:bg-zinc-900 dark:focus:border-blue-500 dark:focus:ring-blue-500/10"
           />
         </div>
       )}
@@ -343,7 +343,7 @@ function TeamRow({
       className={[
         "flex w-full items-center gap-3 px-4 py-3 text-left transition-colors disabled:cursor-not-allowed",
         selected
-          ? "bg-indigo-50 dark:bg-indigo-500/10"
+          ? "bg-blue-50 dark:bg-blue-500/10"
           : "hover:bg-zinc-50 disabled:hover:bg-transparent dark:hover:bg-zinc-800/60",
       ].join(" ")}
     >
@@ -353,7 +353,7 @@ function TeamRow({
           className={[
             "truncate text-sm font-medium",
             selected
-              ? "text-indigo-700 dark:text-indigo-300"
+              ? "text-blue-700 dark:text-blue-300"
               : disabled
                 ? "text-zinc-400 dark:text-zinc-600"
                 : "text-zinc-900 dark:text-zinc-100",
@@ -369,7 +369,7 @@ function TeamRow({
         className={[
           "flex shrink-0 items-center gap-1.5 text-sm font-semibold tabular-nums",
           selected
-            ? "text-indigo-700 dark:text-indigo-300"
+            ? "text-blue-700 dark:text-blue-300"
             : disabled
               ? "text-zinc-400 dark:text-zinc-600"
               : "text-zinc-600 dark:text-zinc-400",
@@ -381,7 +381,7 @@ function TeamRow({
             className={[
               "rounded-full px-1.5 py-0.5 text-[10px] font-semibold",
               selected
-                ? "bg-indigo-100 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-300"
+                ? "bg-blue-100 text-blue-600 dark:bg-blue-500/20 dark:text-blue-300"
                 : "bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400",
             ].join(" ")}
           >
@@ -389,7 +389,7 @@ function TeamRow({
           </span>
         )}
       </div>
-      {selected && <CheckIcon className="h-4 w-4 shrink-0 text-indigo-600 dark:text-indigo-400" />}
+      {selected && <CheckIcon className="h-4 w-4 shrink-0 text-blue-600 dark:text-blue-400" />}
     </button>
   );
 }

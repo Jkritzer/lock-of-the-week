@@ -19,44 +19,33 @@ export default async function HistoryPage() {
               Week {week.weekNumber} · {week.seasonYear}
             </h2>
             <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-              <table className="w-full border-collapse text-sm">
-                <thead>
-                  <tr className="border-b border-zinc-200 bg-zinc-50 text-left text-xs font-semibold tracking-wide text-zinc-500 uppercase dark:border-zinc-800 dark:bg-zinc-950/40 dark:text-zinc-500">
-                    <th className="px-4 py-3">Name</th>
-                    <th className="px-4 py-3">Pick</th>
-                    <th className="px-4 py-3 text-right">Result</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {week.rows.map((row) => (
-                    <tr
-                      key={row.participantId}
-                      className="border-b border-zinc-100 last:border-0 hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-800/40"
-                    >
-                      <td className="px-4 py-3 font-medium text-zinc-900 dark:text-zinc-100">{row.name}</td>
-                      <td className="px-4 py-3 text-zinc-600 dark:text-zinc-400">
-                        {row.pick ? (
-                          <>
-                            <span className="text-zinc-900 dark:text-zinc-100">
-                              {row.pick.pickedTeam} {formatSpread(row.pick.spreadAtPick)}
-                            </span>{" "}
-                            <span className="text-zinc-400 dark:text-zinc-500">vs {row.pick.opponent}</span>
-                          </>
-                        ) : (
-                          <span className="text-zinc-400 dark:text-zinc-600">No pick</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        {row.pick ? (
-                          <ResultBadge result={row.pick.result} coverMargin={row.pick.coverMargin} />
-                        ) : (
-                          <span className="text-zinc-300 dark:text-zinc-700">—</span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              {week.rows.map((row) => (
+                <div
+                  key={row.participantId}
+                  className="flex items-start justify-between gap-3 border-b border-zinc-100 px-4 py-3 last:border-0 dark:border-zinc-800"
+                >
+                  <div className="min-w-0">
+                    <div className="font-medium text-zinc-900 dark:text-zinc-100">{row.name}</div>
+                    {row.pick ? (
+                      <div className="mt-0.5 text-sm">
+                        <span className="text-zinc-700 dark:text-zinc-300">
+                          {row.pick.pickedTeam} {formatSpread(row.pick.spreadAtPick)}
+                        </span>{" "}
+                        <span className="text-zinc-400 dark:text-zinc-600">vs {row.pick.opponent}</span>
+                      </div>
+                    ) : (
+                      <div className="mt-0.5 text-sm text-zinc-400 dark:text-zinc-600">No pick</div>
+                    )}
+                  </div>
+                  <div className="shrink-0 pt-0.5">
+                    {row.pick ? (
+                      <ResultBadge result={row.pick.result} coverMargin={row.pick.coverMargin} />
+                    ) : (
+                      <span className="text-sm text-zinc-300 dark:text-zinc-700">—</span>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         ))}

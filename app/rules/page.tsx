@@ -56,7 +56,7 @@ export default function RulesPage() {
             <ul className="flex flex-col gap-1.5 text-sm text-zinc-600 dark:text-zinc-400">
               {section.body.map((line) => (
                 <li key={line} className="flex gap-2">
-                  <span className="text-indigo-400 dark:text-indigo-500">·</span>
+                  <span className="text-blue-400 dark:text-blue-500">·</span>
                   <span>{line}</span>
                 </li>
               ))}
