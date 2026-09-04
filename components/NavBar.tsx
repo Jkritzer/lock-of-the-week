@@ -25,7 +25,7 @@ export default function NavBar() {
               key={link.href}
               href={link.href}
               className={
-                "truncate rounded-full px-2 py-1.5 text-center text-sm font-medium transition-colors " +
+                "rounded-full px-1 py-2 text-center text-[13px] font-medium transition-colors sm:px-3 sm:py-1.5 sm:text-sm " +
                 (pathname === link.href
                   ? "bg-white text-zinc-900 shadow-sm dark:bg-zinc-950 dark:text-zinc-50"
                   : "text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100")
