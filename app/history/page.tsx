@@ -1,4 +1,5 @@
 import { getWeeklyHistory } from "@/lib/history";
+import { getTeamShortName } from "@/lib/teamShortNames";
 
 export const dynamic = "force-dynamic";
 
@@ -29,9 +30,11 @@ export default async function HistoryPage() {
                     {row.pick ? (
                       <div className="mt-0.5 text-sm">
                         <span className="text-zinc-700 dark:text-zinc-300">
-                          {row.pick.pickedTeam} {formatSpread(row.pick.spreadAtPick)}
+                          {getTeamShortName(row.pick.pickedTeam)} {formatSpread(row.pick.spreadAtPick)}
                         </span>{" "}
-                        <span className="text-zinc-400 dark:text-zinc-600">vs {row.pick.opponent}</span>
+                        <span className="text-zinc-400 dark:text-zinc-600">
+                          vs {getTeamShortName(row.pick.opponent)}
+                        </span>
                       </div>
                     ) : (
                       <div className="mt-0.5 text-sm text-zinc-400 dark:text-zinc-600">No pick</div>

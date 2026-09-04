@@ -16,19 +16,19 @@ export default function NavBar() {
   return (
     <header className="sticky top-0 z-10 w-full border-b border-zinc-200 bg-white/80 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/80">
       <div className="mx-auto flex max-w-2xl flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
-        <span className="font-display text-lg font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
+        <span className="font-display shrink-0 text-lg font-semibold tracking-tight whitespace-nowrap text-zinc-900 dark:text-zinc-50">
           🔒 Lock of the Week
         </span>
-        <nav className="-mx-1 flex gap-1 overflow-x-auto">
+        <nav className="grid w-full grid-cols-4 gap-1 rounded-full bg-zinc-100 p-1 sm:w-auto dark:bg-zinc-800">
           {LINKS.map((link) => (
             <Link
               key={link.href}
               href={link.href}
               className={
-                "shrink-0 rounded-full px-3 py-1.5 text-sm font-medium transition-colors " +
+                "truncate rounded-full px-2 py-1.5 text-center text-sm font-medium transition-colors " +
                 (pathname === link.href
-                  ? "bg-blue-600 text-white dark:bg-blue-500"
-                  : "text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-50")
+                  ? "bg-white text-zinc-900 shadow-sm dark:bg-zinc-950 dark:text-zinc-50"
+                  : "text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100")
               }
             >
               {link.label}
