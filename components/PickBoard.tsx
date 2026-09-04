@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { CONFERENCES, getTeamConference, type Conference } from "@/lib/conferences";
 
 type Participant = { id: string; name: string };
 
@@ -50,6 +51,7 @@ export default function PickBoard({
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
+  const [selectedConferences, setSelectedConferences] = useState<Set<Conference>>(new Set());
 
   if (!initialParticipant) {
     return (
@@ -119,14 +121,30 @@ export default function PickBoard({
     });
   }
 
+  function toggleConference(conference: Conference) {
+    setSelectedConferences((prev) => {
+      const next = new Set(prev);
+      if (next.has(conference)) {
+        next.delete(conference);
+      } else {
+        next.add(conference);
+      }
+      return next;
+    });
+  }
+
   const normalizedQuery = query.trim().toLowerCase();
-  const filteredGames = normalizedQuery
-    ? games.filter(
-        (g) =>
-          g.homeTeam.toLowerCase().includes(normalizedQuery) ||
-          g.awayTeam.toLowerCase().includes(normalizedQuery),
-      )
-    : games;
+  const filteredGames = games.filter((g) => {
+    const matchesQuery =
+      !normalizedQuery ||
+      g.homeTeam.toLowerCase().includes(normalizedQuery) ||
+      g.awayTeam.toLowerCase().includes(normalizedQuery);
+    const matchesConference =
+      selectedConferences.size === 0 ||
+      isSelectedConference(selectedConferences, getTeamConference(g.homeTeam)) ||
+      isSelectedConference(selectedConferences, getTeamConference(g.awayTeam));
+    return matchesQuery && matchesConference;
+  });
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-8">
@@ -231,8 +249,40 @@ export default function PickBoard({
         </div>
       )}
 
+      {games.length > 0 && (
+        <div className="mb-4 flex flex-wrap gap-2">
+          {CONFERENCES.map((conference) => {
+            const active = selectedConferences.has(conference);
+            return (
+              <button
+                key={conference}
+                onClick={() => toggleConference(conference)}
+                className={[
+                  "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+                  active
+                    ? "border-blue-600 bg-blue-600 text-white dark:border-blue-500 dark:bg-blue-500"
+                    : "border-zinc-200 text-zinc-500 hover:border-zinc-400 hover:text-zinc-900 dark:border-zinc-800 dark:text-zinc-400 dark:hover:border-zinc-600 dark:hover:text-zinc-100",
+                ].join(" ")}
+              >
+                {conference}
+              </button>
+            );
+          })}
+          {selectedConferences.size > 0 && (
+            <button
+              onClick={() => setSelectedConferences(new Set())}
+              className="rounded-full px-3 py-1 text-xs font-medium text-zinc-400 underline hover:text-zinc-900 dark:text-zinc-500 dark:hover:text-zinc-100"
+            >
+              Clear
+            </button>
+          )}
+        </div>
+      )}
+
       {games.length > 0 && filteredGames.length === 0 && (
-        <p className="text-zinc-500 dark:text-zinc-400">No games match &quot;{query}&quot;.</p>
+        <p className="text-zinc-500 dark:text-zinc-400">
+          {normalizedQuery ? `No games match "${query}".` : "No games match the selected conferences."}
+        </p>
       )}
 
       <div className="flex flex-col gap-6">
@@ -300,6 +350,10 @@ export default function PickBoard({
       </div>
     </div>
   );
+}
+
+function isSelectedConference(selected: Set<Conference>, conference: Conference | null): boolean {
+  return conference !== null && selected.has(conference);
 }
 
 function groupGamesByDay(games: Game[]): { key: string; label: string; games: Game[] }[] {
