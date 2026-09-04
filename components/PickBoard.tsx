@@ -52,6 +52,7 @@ export default function PickBoard({
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [selectedConferences, setSelectedConferences] = useState<Set<Conference>>(new Set());
+  const [hideStarted, setHideStarted] = useState(false);
 
   if (!initialParticipant) {
     return (
@@ -143,7 +144,8 @@ export default function PickBoard({
       selectedConferences.size === 0 ||
       isSelectedConference(selectedConferences, getTeamConference(g.homeTeam)) ||
       isSelectedConference(selectedConferences, getTeamConference(g.awayTeam));
-    return matchesQuery && matchesConference;
+    const matchesStarted = !hideStarted || new Date(g.commenceTime) > new Date();
+    return matchesQuery && matchesConference && matchesStarted;
   });
 
   return (
@@ -268,6 +270,18 @@ export default function PickBoard({
               </button>
             );
           })}
+          <span className="mx-1 w-px self-stretch bg-zinc-200 dark:bg-zinc-800" />
+          <button
+            onClick={() => setHideStarted((prev) => !prev)}
+            className={[
+              "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+              hideStarted
+                ? "border-blue-600 bg-blue-600 text-white dark:border-blue-500 dark:bg-blue-500"
+                : "border-zinc-200 text-zinc-500 hover:border-zinc-400 hover:text-zinc-900 dark:border-zinc-800 dark:text-zinc-400 dark:hover:border-zinc-600 dark:hover:text-zinc-100",
+            ].join(" ")}
+          >
+            Hide kicked off
+          </button>
           {selectedConferences.size > 0 && (
             <button
               onClick={() => setSelectedConferences(new Set())}
@@ -281,7 +295,11 @@ export default function PickBoard({
 
       {games.length > 0 && filteredGames.length === 0 && (
         <p className="text-zinc-500 dark:text-zinc-400">
-          {normalizedQuery ? `No games match "${query}".` : "No games match the selected conferences."}
+          {normalizedQuery
+            ? `No games match "${query}".`
+            : hideStarted
+              ? "No games left to pick — everything's kicked off or filtered out."
+              : "No games match the selected conferences."}
         </p>
       )}
 
