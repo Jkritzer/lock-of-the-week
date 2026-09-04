@@ -1,58 +1,67 @@
 import { getWeeklyHistory } from "@/lib/history";
 import { getTeamShortName } from "@/lib/teamShortNames";
+import WeekSelect from "@/components/WeekSelect";
 
 export const dynamic = "force-dynamic";
 
-export default async function HistoryPage() {
-  const weeks = await getWeeklyHistory();
+export default async function HistoryPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ week?: string }>;
+}) {
+  const [weeks, { week: requestedWeekId }] = await Promise.all([getWeeklyHistory(), searchParams]);
+  const selectedWeek = weeks.find((w) => w.weekId === requestedWeekId) ?? weeks[0] ?? null;
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-8">
-      <h1 className="font-display text-3xl font-semibold tracking-tight">Picks by Week</h1>
-      <p className="mt-1 mb-6 text-sm text-zinc-500 dark:text-zinc-400">Who picked what, every week of the season.</p>
+      <div className="mb-6 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="font-display text-3xl font-semibold tracking-tight">Picks by Week</h1>
+          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">Who picked what, every week of the season.</p>
+        </div>
+        {weeks.length > 0 && selectedWeek && (
+          <WeekSelect
+            weeks={weeks.map((w) => ({ id: w.weekId, label: `Week ${w.weekNumber} · ${w.seasonYear}` }))}
+            selectedWeekId={selectedWeek.weekId}
+          />
+        )}
+      </div>
 
       {weeks.length === 0 && <p className="text-zinc-500 dark:text-zinc-400">No weeks yet.</p>}
 
-      <div className="flex flex-col gap-8">
-        {weeks.map((week) => (
-          <div key={week.weekId}>
-            <h2 className="mb-2 text-sm font-semibold tracking-wide text-zinc-500 uppercase dark:text-zinc-400">
-              Week {week.weekNumber} · {week.seasonYear}
-            </h2>
-            <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-              {week.rows.map((row) => (
-                <div
-                  key={row.participantId}
-                  className="flex items-start justify-between gap-3 border-b border-zinc-100 px-4 py-3 last:border-0 dark:border-zinc-800"
-                >
-                  <div className="min-w-0">
-                    <div className="font-medium text-zinc-900 dark:text-zinc-100">{row.name}</div>
-                    {row.pick ? (
-                      <div className="mt-0.5 text-sm">
-                        <span className="text-zinc-700 dark:text-zinc-300">
-                          {getTeamShortName(row.pick.pickedTeam)} {formatSpread(row.pick.spreadAtPick)}
-                        </span>{" "}
-                        <span className="text-zinc-400 dark:text-zinc-600">
-                          vs {getTeamShortName(row.pick.opponent)}
-                        </span>
-                      </div>
-                    ) : (
-                      <div className="mt-0.5 text-sm text-zinc-400 dark:text-zinc-600">No pick</div>
-                    )}
+      {selectedWeek && (
+        <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+          {selectedWeek.rows.map((row) => (
+            <div
+              key={row.participantId}
+              className="flex items-start justify-between gap-3 border-b border-zinc-100 px-4 py-3 last:border-0 dark:border-zinc-800"
+            >
+              <div className="min-w-0">
+                <div className="font-medium text-zinc-900 dark:text-zinc-100">{row.name}</div>
+                {row.pick ? (
+                  <div className="mt-0.5 text-sm">
+                    <span className="text-zinc-700 dark:text-zinc-300">
+                      {getTeamShortName(row.pick.pickedTeam)} {formatSpread(row.pick.spreadAtPick)}
+                    </span>{" "}
+                    <span className="text-zinc-400 dark:text-zinc-600">
+                      vs {getTeamShortName(row.pick.opponent)}
+                    </span>
                   </div>
-                  <div className="shrink-0 pt-0.5">
-                    {row.pick ? (
-                      <ResultBadge result={row.pick.result} coverMargin={row.pick.coverMargin} />
-                    ) : (
-                      <span className="text-sm text-zinc-300 dark:text-zinc-700">—</span>
-                    )}
-                  </div>
-                </div>
-              ))}
+                ) : (
+                  <div className="mt-0.5 text-sm text-zinc-400 dark:text-zinc-600">No pick</div>
+                )}
+              </div>
+              <div className="shrink-0 pt-0.5">
+                {row.pick ? (
+                  <ResultBadge result={row.pick.result} coverMargin={row.pick.coverMargin} />
+                ) : (
+                  <span className="text-sm text-zinc-300 dark:text-zinc-700">—</span>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
