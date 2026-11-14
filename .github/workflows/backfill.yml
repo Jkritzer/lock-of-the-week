@@ -1,0 +1,12 @@
+name: Lock of the Week Backfill
+
+on:
+  workflow_dispatch:
+
+jobs:
+  backfill-scores:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Backfill stuck games from ESPN
+        run: |
+          curl -sf -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" "${{ vars.APP_URL }}/api/cron/backfill-scores"
